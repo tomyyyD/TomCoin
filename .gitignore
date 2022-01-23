@@ -3,3 +3,4 @@ receiver.pem
 /__pycache__
 /venv
 test.py
+key.json
