@@ -4,3 +4,5 @@ receiver.pem
 /venv
 test.py
 key.json
+createdb.py
+tomcoin.db

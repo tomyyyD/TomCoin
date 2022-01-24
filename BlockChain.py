@@ -4,7 +4,6 @@ import hashlib
 from datetime import datetime
 from Crypto.PublicKey import RSA
 from Crypto.Signature import *
-from flask import Flask
 
 class BlockChain (object):
     def __init__(self):
@@ -36,6 +35,7 @@ class BlockChain (object):
             print("transaction error: invalid")
             return False
         self.pendingTransactions.append(transaction)
+        print("transaction occurred")
         return len(self.chain) + 1
 
     def getLastBlock(self):
@@ -120,7 +120,7 @@ class BlockChain (object):
                 newBlock.prevHash = prevHash
                 newBlock.mineBlock(self.difficulty)
                 self.chain.append(newBlock)
-            print("mining transactions worked!")
+            print(f"user {miner} has received {self.minerReward} TomCoin")
             payMiner = Transaction("Miner Rewards", miner, self.minerReward)
             self.pendingTransactions = [payMiner]
         return True
@@ -150,7 +150,7 @@ class Block (object):
 
     def mineBlock(self, difficulty):
         # create goal hash 
-        #an array that is [o,1,2,3...difficulty]
+        #an array that is [0,1,2,3...difficulty]
         arr = []
         for i in range(0,difficulty):
             arr.append(i)
@@ -163,10 +163,10 @@ class Block (object):
         while self.hash[0:difficulty] != hashPuzzle:
             self.nonce += 1
             self.hash = self.calculateHash()
-        #     print("nonce: ", self.nonce)
-        #     print("hash Attempt: \t", self.hash)
-        #     print("goal hash: \t", hashPuzzle, "...\n")
-        # print("")
+            print("nonce: ", self.nonce)
+            print("hash Attempt: \t", self.hash)
+            print("goal hash: \t", hashPuzzle, "...\n")
+        print("")
         print("Block Mined!")
         print("Nonce is: ", self.nonce)
         return True

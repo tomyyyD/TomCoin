@@ -1,24 +1,139 @@
-from flask import Flask, request, jsonify
+import sqlite3
+from unittest import result
+from flask import Flask, redirect, request
 from flask import render_template
-from firebase_admin import credentials, firestore, initialize_app
+from BlockChain import BlockChain
+from flask import g
+import sqlite3 as sql
+from flask import url_for
+
+DATABASE = 'tomcoin.db'
 
 app = Flask ("BritCoin server")
 
-# initialize firestore DB
-cred = credentials.Certificate('key.json')
-default_app = initialize_app(cred)
-db = firestore.client()
-todo_ref = db.collection('todos')
+blockchain = BlockChain()
 
-@app.route('/add', methods=['POST'])
-def create():
-    try:
-        id = request.json['id']
-        todo_ref.document(id).set(request.json)
-        return jsonify({"success": True}), 200
-    except Exception as e:
-        return f"an error occurred: {e}"
+
+def getDB():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = sqlite3.connect(DATABASE)
+    return db
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_databse', None)
+    if db is not None:
+        db.close()
 
 @app.route('/')
-def hello ():
-    return render_template('homepage.html')
+def homepage():
+    return render_template('index.html' )
+
+@app.route('/login')
+def login():
+    return render_template('login.html')
+
+@app.route('/checkacc', methods=['POST', 'GET'])
+def checkAccount():
+    if request.method == 'POST':
+        con = sql.connect(DATABASE)
+
+        con.row_factory = sql.Row
+
+        cur = con.cursor()
+        cur.execute("select * from users")
+        rows = cur.fetchall()
+
+        username = request.form['uName']
+        password = request.form['pw']
+
+        msg = f'cannot find username {username}'
+
+        for row in rows:
+            if row['username'] == username:
+                account = row
+                if account['password'] == password:
+                    # msg = f"found account. Hello {row['firstname']}!"
+                    return redirect(url_for('userPage', username=account['username']))
+                else:
+                    msg = f"incorrect password for {row['username']}"
+        
+        
+        return render_template('result.html', input = msg)
+
+@app.route('/user/<username>')
+def userPage(username):
+    con = sql.connect(DATABASE)
+
+    con.row_factory = sql.Row
+
+    cur = con.cursor()
+    
+    cur.execute(f"SELECT * FROM users WHERE username='{username}'")
+    account = cur.fetchall()[0]
+
+
+    return render_template('accountPage.html', user = account, bcinput = blockchain)
+
+@app.route('/createAccount')
+def createAccount ():
+    return render_template('createAccount.html')
+
+@app.route('/transaction', methods=['POST', 'GET'])
+def createTransaction():
+    if request.method == 'POST':
+        sender = request.form['user']
+        receiver = request.form['receiver']
+        amount = int(request.form['amount'])
+        
+        con = sql.connect(DATABASE)
+
+        con.row_factory = sql.Row
+
+        cur = con.cursor()
+        
+        cur.execute(f"SELECT * FROM users WHERE username='{sender}'")
+        account = cur.fetchall()[0]
+
+        signature = account[6]
+        balance = account[5]
+
+        newBalance = balance - amount
+        cur.execute(f"UPDATE users SET balance={newBalance} WHERE username='{sender}'")
+        con.commit()
+        print(sender, receiver, amount, signature)
+
+        blockchain.addTransaction(sender, receiver, amount, signature, signature)
+
+        return redirect(url_for('userPage', user=account))
+
+@app.route('/addrec', methods = ['POST', 'GET'])
+def addrec():
+    if request.method == 'POST':
+        try:
+            fName = request.form['fName']
+            lName = request.form['lName']
+            uName = request.form['uName']
+            email = request.form['email']
+            pw = request.form['pw']
+            pw2 = request.form['pw2']
+            pubKey = blockchain.generateKeys()
+
+            with sql.connect(DATABASE) as con:
+                if pw == pw2:
+                    cur = con.cursor()
+                    cur.execute("INSERT INTO users(username, password, email, firstname, lastname, balance, publicKey) VALUES(?,?,?,?,?,?,?)", (uName, pw, email, fName, lName, 50, pubKey))
+                    con.commit()
+                    msg = "Record added successfully"
+                else:
+                    msg = "Passwords did not match"
+
+        except:
+            con.rollback()
+            msg = "Error inserting information"
+
+        finally:
+            con.close()
+            return render_template("result.html", input = msg)
+            

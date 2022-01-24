@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        td{
+            border: 1px solid black;
+            padding: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello {{ user['firstname']}}</h1>
+    <h3>welcome to your TomCoin account!</h3>
+
+    <h3>balance {{ user['balance'] }}</h3>
+    <div class="transaction">
+        <form action="{{ url_for('createTransaction') }}" method="POST">
+            <input readonly='readonly' type="text" name='user' value="{{ user['username'] }}">
+            <input type="text" name='receiver'>
+    
+            <input type='number' name='amount' max='{{ user["balance"] }}'>
+
+            <input type="submit" value="Create transaction">
+    
+        </form>    
+    </div>
+
+    {% for block in bcinput.chain %}
+    <div style="border: solid 2px black; border-radius: 10px; padding: 10px;">
+        <h2>block: {{block.index}}</h2>
+        <table style="border: 1px solid black;">
+            Ledger
+            <thead>
+                <td>sender</td>
+                <td>receiver</td>
+                <td>amount</td>
+            </thead>
+
+            {% for transaction in block.transactions %}
+            <tr>
+                <td>{{transaction.sender}}</td>
+                <td>{{transaction.receiver}}</td>
+                <td>{{transaction.amt}}</td>
+            </tr>
+            {% endfor %}
+
+        </table>
+    </div>
+    {% endfor %}
+
+
+    <table style="border: 1px solid black;">
+        Pending Transactions
+        <thead>
+            <td>sender</td>
+            <td>receiver</td>
+            <td>amount</td>
+        </thead>
+        {% for pt in bcinput.pendingTransactions %}
+
+            <tr>
+                <td>{{pt.sender}}</td>
+                <td>{{pt.receiver}}</td>
+                <td>{{pt.amt}}</td>
+            </tr>
+
+        {% endfor %}
+    </table>
+
+    <a href="/">HOME</a>
+</body>
+</html>
