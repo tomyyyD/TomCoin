@@ -73,8 +73,12 @@ def userPage(username):
     cur.execute(f"SELECT * FROM users WHERE username='{username}'")
     account = cur.fetchall()[0]
 
+    cur.execute(f"SELECT username FROM users")
+    users = cur.fetchall()
 
-    return render_template('accountPage.html', user = account, bcinput = blockchain)
+
+
+    return render_template('accountPage.html', user = account, bcinput = blockchain, userList = users)
 
 @app.route('/createAccount')
 def createAccount ():
@@ -95,18 +99,24 @@ def createTransaction():
         
         cur.execute(f"SELECT * FROM users WHERE username='{sender}'")
         account = cur.fetchall()[0]
+        senderSignature = account[6]
+        senderBalance = account[5]
 
-        signature = account[6]
-        balance = account[5]
 
-        newBalance = balance - amount
-        cur.execute(f"UPDATE users SET balance={newBalance} WHERE username='{sender}'")
+        cur.execute(f"SElECT * FROM users WHERE username='{receiver}'")
+        receiver = cur.fetchall()[0]
+        receiverBalance = receiver[5]
+
+        newSenderBalance = senderBalance - amount
+        newReceiverBalance = receiverBalance + amount
+        cur.execute(f"UPDATE users SET balance={newSenderBalance} WHERE username='{sender}'")
+        cur.execute(f"UPDATE users SET balance={newReceiverBalance} WHERE username='{sender}'")
         con.commit()
-        print(sender, receiver, amount, signature)
+        print(sender, receiver, amount, senderSignature)
 
-        blockchain.addTransaction(sender, receiver, amount, signature, signature)
+        blockchain.addTransaction(sender, receiver, amount, senderSignature, senderSignature)
 
-        return redirect(url_for('userPage', user=account))
+        return redirect(url_for('userPage', username=sender))
 
 @app.route('/addrec', methods = ['POST', 'GET'])
 def addrec():

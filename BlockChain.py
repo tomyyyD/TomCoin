@@ -10,7 +10,7 @@ class BlockChain (object):
         self.chain = [self.addGenesisBlock()]
         self.pendingTransactions = []
         #how difficult it is to mine a block
-        self.difficulty = 4
+        self.difficulty = 3
         #currency reward to miner
         self.minerReward = 50
         #how many transactions per block

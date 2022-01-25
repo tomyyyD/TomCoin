@@ -20,9 +20,16 @@
     <div class="transaction">
         <form action="{{ url_for('createTransaction') }}" method="POST">
             <input readonly='readonly' type="text" name='user' value="{{ user['username'] }}">
-            <input type="text" name='receiver'>
+            <!-- <input type="text" name='receiver'> -->
+            <select name="receiver">
+                {% for account in userList %}
+                    {% if user['username'] != account['username'] %}
+                    <option value="{{account['username']}}">{{account['username']}}</option>
+                    {% endif %}
+                {% endfor %}
+            </select>
     
-            <input type='number' name='amount' max='{{ user["balance"] }}'>
+            <input type='number' name='amount' max='{{ user["balance"] }}' min='0'>
 
             <input type="submit" value="Create transaction">
     
