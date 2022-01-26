@@ -10,7 +10,7 @@ class BlockChain (object):
         self.chain = [self.addGenesisBlock()]
         self.pendingTransactions = []
         #how difficult it is to mine a block
-        self.difficulty = 3
+        self.difficulty = 5
         #currency reward to miner
         self.minerReward = 50
         #how many transactions per block
@@ -24,7 +24,7 @@ class BlockChain (object):
         senderKey = RSA.import_key(senderKeyByte)
 
         if not sender or not receiver or not amt:
-            print ("transaction error")
+            print ("transaction error: missing information")
             return False
 
         transaction = Transaction(sender, receiver, amt)
@@ -35,7 +35,7 @@ class BlockChain (object):
             print("transaction error: invalid")
             return False
         self.pendingTransactions.append(transaction)
-        print("transaction occurred")
+        # print("transaction occurred")
         return len(self.chain) + 1
 
     def getLastBlock(self):

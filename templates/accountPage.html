@@ -29,12 +29,17 @@
                 {% endfor %}
             </select>
     
-            <input type='number' name='amount' max='{{ user["balance"] }}' min='0'>
+            <input type='number' name='amount' max='{{ user["balance"] }}' min='1'>
 
             <input type="submit" value="Create transaction">
     
         </form>    
     </div>
+
+    <form action="{{ url_for('mineBlock', currentUser=user['username']) }}" method="POST">
+        <input type="submit" value="Mine a new block!">
+    </form>
+
 
     {% for block in bcinput.chain %}
     <div style="border: solid 2px black; border-radius: 10px; padding: 10px;">

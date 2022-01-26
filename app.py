@@ -58,7 +58,7 @@ def checkAccount():
                     return redirect(url_for('userPage', username=account['username']))
                 else:
                     msg = f"incorrect password for {row['username']}"
-        
+        con.close()
         
         return render_template('result.html', input = msg)
 
@@ -75,7 +75,7 @@ def userPage(username):
 
     cur.execute(f"SELECT username FROM users")
     users = cur.fetchall()
-
+    con.close()
 
 
     return render_template('accountPage.html', user = account, bcinput = blockchain, userList = users)
@@ -98,21 +98,22 @@ def createTransaction():
         cur = con.cursor()
         
         cur.execute(f"SELECT * FROM users WHERE username='{sender}'")
-        account = cur.fetchall()[0]
-        senderSignature = account[6]
-        senderBalance = account[5]
+        senderAccount = cur.fetchall()[0]
+        senderSignature = senderAccount[6]
+        # senderBalance = senderAccount[5]
 
+        con.close()
 
-        cur.execute(f"SElECT * FROM users WHERE username='{receiver}'")
-        receiver = cur.fetchall()[0]
-        receiverBalance = receiver[5]
+        # cur.execute(f"SElECT * FROM users WHERE username='{receiver}'")
+        # receiverAccount = cur.fetchall()[0]
+        # receiverBalance = receiverAccount[5]
 
-        newSenderBalance = senderBalance - amount
-        newReceiverBalance = receiverBalance + amount
-        cur.execute(f"UPDATE users SET balance={newSenderBalance} WHERE username='{sender}'")
-        cur.execute(f"UPDATE users SET balance={newReceiverBalance} WHERE username='{sender}'")
-        con.commit()
-        print(sender, receiver, amount, senderSignature)
+        # newSenderBalance = senderBalance - amount
+        # newReceiverBalance = receiverBalance + amount
+        # cur.execute(f"UPDATE users SET balance={newSenderBalance} WHERE username='{sender}'")
+        # cur.execute(f"UPDATE users SET balance={newReceiverBalance} WHERE username='{receiver}'")
+        # con.commit()
+        # print(sender, receiver, amount, senderSignature)
 
         blockchain.addTransaction(sender, receiver, amount, senderSignature, senderSignature)
 
@@ -146,4 +147,9 @@ def addrec():
         finally:
             con.close()
             return render_template("result.html", input = msg)
-            
+
+@app.route('/mine/<currentUser>', methods = ['POST', 'GET'])
+def mineBlock(currentUser):
+    
+    blockchain.minePendingTransactions(currentUser)
+    return redirect(url_for('userPage', username=currentUser))
