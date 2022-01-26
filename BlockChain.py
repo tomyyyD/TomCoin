@@ -10,7 +10,7 @@ class BlockChain (object):
         self.chain = [self.addGenesisBlock()]
         self.pendingTransactions = []
         #how difficult it is to mine a block
-        self.difficulty = 5
+        self.difficulty = 3
         #currency reward to miner
         self.minerReward = 50
         #how many transactions per block
@@ -149,6 +149,8 @@ class Block (object):
         return hashlib.sha256(hashEncoded).hexdigest()
 
     def mineBlock(self, difficulty):
+
+        timeNow = time()
         # create goal hash 
         #an array that is [0,1,2,3...difficulty]
         arr = []
@@ -163,12 +165,16 @@ class Block (object):
         while self.hash[0:difficulty] != hashPuzzle:
             self.nonce += 1
             self.hash = self.calculateHash()
-            print("nonce: ", self.nonce)
-            print("hash Attempt: \t", self.hash)
-            print("goal hash: \t", hashPuzzle, "...\n")
+            # print("nonce: ", self.nonce)
+            # print("hash Attempt: \t", self.hash)
+            # print("goal hash: \t", hashPuzzle, "...\n")
+
+        timeFinish = time()
+        deltaTime = timeFinish - timeNow
         print("")
         print("Block Mined!")
         print("Nonce is: ", self.nonce)
+        print(f"if took: {deltaTime}seconds")
         return True
 
 

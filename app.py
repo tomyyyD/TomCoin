@@ -12,6 +12,7 @@ app = Flask ("BritCoin server")
 
 blockchain = BlockChain()
 
+currentBlock = 0
 
 def getDB():
     db = getattr(g, '_database', None)
@@ -37,10 +38,9 @@ def login():
 def checkAccount():
     if request.method == 'POST':
         con = sql.connect(DATABASE)
-
         con.row_factory = sql.Row
-
         cur = con.cursor()
+
         cur.execute("select * from users")
         rows = cur.fetchall()
 
@@ -64,9 +64,7 @@ def checkAccount():
 @app.route('/user/<username>')
 def userPage(username):
     con = sql.connect(DATABASE)
-
     con.row_factory = sql.Row
-
     cur = con.cursor()
     
     cur.execute(f"SELECT * FROM users WHERE username='{username}'")
@@ -91,9 +89,7 @@ def createTransaction():
         amount = int(request.form['amount'])
         
         con = sql.connect(DATABASE)
-
         con.row_factory = sql.Row
-
         cur = con.cursor()
         
         cur.execute(f"SELECT * FROM users WHERE username='{sender}'")
@@ -151,4 +147,37 @@ def addrec():
 def mineBlock(currentUser):
     
     blockchain.minePendingTransactions(currentUser)
+
+    updateBlances()
+
     return redirect(url_for('userPage', username=currentUser))
+
+def updateBlances():
+    con = sql.connect(DATABASE)
+    con.row_factory = sql.Row
+    cur = con.cursor()
+
+    global currentBlock
+    currentBlock += 1
+
+    for transaction in blockchain.chain[currentBlock].transactions:
+        sender = transaction.sender
+        receiver = transaction.receiver
+        amount = int(transaction.amt)
+
+        
+        if sender !="Miner Rewards":
+            cur.execute(f"SELECT balance FROM users WHERE username='{sender}'")
+            senderBalance = int(cur.fetchall()[0]['balance'])
+
+            cur.execute(f"UPDATE users SET balance={senderBalance - amount} WHERE username='{sender}'")
+
+        cur.execute(f"SELECT balance FROM users WHERE username='{receiver}'")
+        receiverBalance = int(cur.fetchall()[0]['balance'])
+        cur.execute(f"UPDATE users SET balance={receiverBalance + amount} WHERE username='{receiver}'")
+
+        # print(senderBalance)
+        # print(receiverBalance)
+
+        con.commit()
+
