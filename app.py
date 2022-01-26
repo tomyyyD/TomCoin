@@ -1,5 +1,4 @@
 import sqlite3
-from unittest import result
 from flask import Flask, redirect, request
 from flask import render_template
 from BlockChain import BlockChain
